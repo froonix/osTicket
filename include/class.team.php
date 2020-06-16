@@ -187,9 +187,11 @@ implements TemplateVariable {
                 && in_array($this->lead_id, $vars['remove']))
             $vars['lead_id'] =0 ;
 
-        $this->flags =
+        $this->flags = (string)
+        (
               ($vars['isenabled'] ? self::FLAG_ENABLED : 0)
-            | ($vars['noalerts']);
+            | ($vars['noalerts'])
+        );
         $this->lead_id = $vars['lead_id'] ?: 0;
         $this->name = Format::striptags($vars['name']);
         $this->notes = Format::sanitize($vars['notes']);

@@ -841,7 +841,7 @@ implements TemplateVariable, Searchable {
             unset($vars['disable_auto_claim']);
 
         $this->pid = $vars['pid'] ?: null;
-        $this->ispublic = isset($vars['ispublic']) ? (int) $vars['ispublic'] : 0;
+        $this->ispublic = (string) (isset($vars['ispublic']) ? (int) $vars['ispublic'] : 0);
         $this->email_id = isset($vars['email_id']) ? (int) $vars['email_id'] : 0;
         $this->tpl_id = isset($vars['tpl_id']) ? (int) $vars['tpl_id'] : 0;
         $this->sla_id = isset($vars['sla_id']) ? (int) $vars['sla_id'] : 0;
