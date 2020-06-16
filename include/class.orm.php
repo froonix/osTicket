@@ -485,7 +485,7 @@ class VerySimpleModel {
             $related = static::$meta['foreign_keys'][$field];
         }
         $old = isset($this->ht[$field]) ? $this->ht[$field] : null;
-        if ($old != $value) {
+        if (($old === null && $value !== null) || $old != $value) {
             // isset should not be used here, because `null` should not be
             // replaced in the dirty array
             if (!array_key_exists($field, $this->dirty))
