@@ -1330,6 +1330,9 @@ implements RestrictedAccess, Threadable, Searchable {
             'ticket' => $this,
             'user' => $user,
             'recipient' => $user,
+            // Get ticket link, with authcode, directly to bypass collabs
+            // check
+            'recipient.ticket_link' => $user->getTicketLink(),
         );
 
         $lang = $user->getLanguage(UserAccount::LANG_MAILOUTS);
@@ -2022,7 +2025,6 @@ implements RestrictedAccess, Threadable, Searchable {
             return false;
 
         $user_comments = (bool) $comments;
-        $comments = $comments ?: _S('Ticket Assignment');
         $assigner = $thisstaff ?: _S('SYSTEM (Auto Assignment)');
 
         //Log an internal note - no alerts on the internal note.
@@ -3167,7 +3169,6 @@ implements RestrictedAccess, Threadable, Searchable {
         $options = array('thread'=>$message);
         // If enabled...send alert to staff (New Message Alert)
         if ($cfg->alertONNewMessage()
-            && $dept->getNumMembersForAlerts()
             && ($email = $dept->getAlertEmail())
             && ($tpl = $dept->getTemplate())
             && ($msg = $tpl->getNewMessageAlertMsgTemplate())
@@ -3388,6 +3389,15 @@ implements RestrictedAccess, Threadable, Searchable {
                 && $recipients
                 && ($tpl = $dept->getTemplate())
                 && ($msg=$tpl->getReplyMsgTemplate())) {
+
+            // Add ticket link (possibly with authtoken) if the ticket owner
+            // is the only recipient on a ticket with collabs
+            if (count($recipients) == 1
+                    && $this->getNumCollaborators()
+                    && ($contact = $recipients->pop()->getContact())
+                    && ($contact instanceof TicketOwner))
+                $variables['recipient.ticket_link'] =
+                    $contact->getTicketLink();
 
             $msg = $this->replaceVars($msg->asArray(),
                 $variables + array('recipient' => $this->getOwner())
@@ -4559,8 +4569,9 @@ implements RestrictedAccess, Threadable, Searchable {
         $vars['note'] = ThreadEntryBody::clean($vars['note']);
         $create_vars = $vars;
         $tform = TicketForm::objects()->one()->getForm($create_vars);
-        $create_vars['files']
-            = $tform->getField('message')->getWidget()->getAttachments()->getFiles();
+        $mfield = $tform->getField('message');
+        $create_vars['message'] = $mfield->getClean();
+        $create_vars['files'] = $mfield->getWidget()->getAttachments()->getFiles();
 
         if (!($ticket=self::create($create_vars, $errors, 'staff', false)))
             return false;
